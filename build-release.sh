@@ -1,0 +1,1 @@
+cargo build --release --package bot_bayun --bin bot_bayun
