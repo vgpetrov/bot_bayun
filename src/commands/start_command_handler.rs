@@ -18,7 +18,7 @@ impl StartCommandHandler {
         Self { in_timer, states }
     }
 
-    pub async fn handle(&mut self, bot: &Bot, msg: &Message) -> Result<Message, RequestError> {
+    pub fn handle(&self, bot: &Bot, msg: &Message) -> String {
         let mut timer_started_already = false;
 
         self.in_timer
@@ -42,19 +42,14 @@ impl StartCommandHandler {
                 .started_at
                 .unwrap();
 
-            bot.send_message(
-                msg.chat.id,
-                format!("Timer already started at {}", DateTime::from_timestamp_millis(started_at).unwrap()),
-            )
-            .await
+            format!("Timer already started at {}", DateTime::from_timestamp_millis(started_at).unwrap())
         } else {
             self.states
                 .entry(msg.chat.id)
                 .or_insert(SleepInterval::new())
                 .start_timer(msg.date.timestamp_millis());
 
-            bot.send_message(msg.chat.id, format!("Started at {}", msg.date))
-                .await
+            format!("Started at {}", msg.date)
         }
     }
 }

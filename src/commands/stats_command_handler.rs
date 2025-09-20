@@ -3,7 +3,6 @@ use chrono::{DateTime, NaiveDateTime, TimeDelta, Utc};
 use dashmap::DashMap;
 use std::sync::Arc;
 use teloxide::prelude::{ChatId, Message, Requester};
-use teloxide::{Bot, RequestError};
 
 pub struct StatsCommandHandler {
     in_timer: Arc<DashMap<ChatId, bool>>,
@@ -18,8 +17,8 @@ impl StatsCommandHandler {
         Self { in_timer, states }
     }
 
-    pub async fn handle(&mut self, bot: &Bot, msg: &Message) -> Result<Message, RequestError> {
-        let mut s = String::new();
+    pub fn handle(&self, msg: &Message) -> String {
+        let mut result = String::new();
 
         let mut total_time: TimeDelta = TimeDelta::milliseconds(0);
 
@@ -32,7 +31,7 @@ impl StatsCommandHandler {
                 if d.stopped_at.is_some() {
                     let delta =
                         TimeDelta::milliseconds(d.stopped_at.unwrap() - d.started_at.unwrap());
-                    s.push_str(&format!(
+                    result.push_str(&format!(
                         "Started at {}, Stopped at {}, Time spent {}:{} \n",
                         DateTime::from_timestamp_millis(d.started_at.unwrap()).unwrap(),
                         DateTime::from_timestamp_millis(d.stopped_at.unwrap()).unwrap(),
@@ -41,21 +40,20 @@ impl StatsCommandHandler {
                     ));
                     total_time += delta;
                 } else {
-                    s.push_str(&format!(
+                    result.push_str(&format!(
                         "Started at {} \n",
                         DateTime::from_timestamp_millis(d.started_at.unwrap()).unwrap(),
                     ));
                 }
             });
 
-        s.push_str(&format!(
+        result.push_str(&format!(
             "\nTotal sleep {}:{}",
             total_time.num_minutes() / 60,
             total_time.num_minutes() % 60
         ));
 
-        bot.send_message(msg.chat.id, format!("📊 Current state:\n{}", s))
-            .await
+        format!("📊 Current state:\n{}", result)
     }
 }
 

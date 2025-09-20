@@ -17,7 +17,7 @@ impl StopCommandHandler {
         Self { in_timer, states }
     }
 
-    pub async fn handle(&mut self, bot: &Bot, msg: &Message) -> Result<Message, RequestError> {
+    pub fn handle(&self, bot: &Bot, msg: &Message) -> String {
         self.in_timer
             .entry(msg.chat.id)
             .and_modify(|v| *v = false);
@@ -27,7 +27,6 @@ impl StopCommandHandler {
             .or_insert(SleepInterval::new())
             .stop_timer(msg.date.timestamp_millis());
 
-        bot.send_message(msg.chat.id, format!("Ends at {}", msg.date))
-            .await
+        format!("Ends at {}", msg.date)
     }
 }

@@ -73,19 +73,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let states: Arc<DashMap<ChatId, SleepInterval>> = Arc::new(DashMap::new());
     let in_timer: Arc<DashMap<ChatId, bool>> = Arc::new(DashMap::new());
 
-    let help_command_handler = Arc::new(Mutex::new(HelpCommandHandler::new()));
-    let start_command_handler = Arc::new(Mutex::new(StartCommandHandler::new(
+    let help_command_handler = Arc::new(HelpCommandHandler::new());
+    let start_command_handler = Arc::new(StartCommandHandler::new(
         Arc::clone(&in_timer),
         Arc::clone(&states),
-    )));
-    let stop_command_handler = Arc::new(Mutex::new(StopCommandHandler::new(
+    ));
+    let stop_command_handler = Arc::new(StopCommandHandler::new(
         Arc::clone(&in_timer),
         Arc::clone(&states),
-    )));
-    let stats_command_handler = Arc::new(Mutex::new(StatsCommandHandler::new(
+    ));
+    let stats_command_handler = Arc::new(StatsCommandHandler::new(
         Arc::clone(&in_timer),
         Arc::clone(&states),
-    )));
+    ));
 
     let new_chat_member_handler = Arc::new(Mutex::new(NewChatMemberHandler::new()));
 
@@ -108,23 +108,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             match cmd {
                 Command::Help => {
-                    help_command_handler.lock().await.handle(&bot, &msg).await?;
+                    help_command_handler.handle(&bot, &msg).await?;
                 }
                 Command::Start(time) => {
-                    start_command_handler
-                        .lock()
-                        .await
-                        .handle(&bot, &msg)
+                    let start_message = start_command_handler.handle(&bot, &msg);
+                    bot.send_message(msg.chat.id, start_message)
                         .await?;
                 }
                 Command::Stop(time) => {
-                    stop_command_handler.lock().await.handle(&bot, &msg).await?;
+                    let stop_message = stop_command_handler.handle(&bot, &msg);
+                    bot.send_message(msg.chat.id, stop_message)
+                        .await?;
                 }
                 Command::Stats => {
-                    stats_command_handler
-                        .lock()
-                        .await
-                        .handle(&bot, &msg)
+                    let stats_message = stats_command_handler.handle(&msg);
+                    bot.send_message(msg.chat.id, stats_message)
                         .await?;
                 }
             };
